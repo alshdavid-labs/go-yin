@@ -6,18 +6,51 @@ import (
 	newrelic "github.com/newrelic/go-agent"
 )
 
-func NewRelic(app newrelic.Application, event string) func(http.Handler) http.Handler {
+type NewRelic struct {
+	App newrelic.Application
+}
+
+func InitNewRelic(app newrelic.Application) *NewRelic {
+	return &NewRelic{app}
+}
+
+func (nr *NewRelic) CustomEvent(event string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if event == "" {
-				event = r.URL.Path
+			txn := newrelic.FromContext(r.Context())
+
+			if txn != nil {
+				txn.Ignore()
 			}
-			txn := app.StartTransaction(event, w, r)
-			defer txn.End()
 
-			r = newrelic.RequestWithTransactionContext(r, txn)
+			customTxn := nr.App.StartTransaction(event, w, r)
+			r = newrelic.RequestWithTransactionContext(r, customTxn)
+			defer customTxn.End()
 
-			next.ServeHTTP(txn, r)
+			next.ServeHTTP(customTxn, r)
 		})
 	}
+}
+
+func (nr *NewRelic) EventFromURLPath(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		txn := nr.App.StartTransaction(r.URL.Path, w, r)
+		defer txn.End()
+
+		r = newrelic.RequestWithTransactionContext(r, txn)
+
+		next.ServeHTTP(txn, r)
+	})
+}
+
+func (nr *NewRelic) Ignore(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var txn newrelic.Transaction
+		txn = newrelic.FromContext(r.Context())
+		if txn != nil {
+			txn.Ignore()
+		}
+
+		next.ServeHTTP(txn, r)
+	})
 }
