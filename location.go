@@ -11,7 +11,7 @@ type Location struct {
 	Origin string
 }
 
-func NewLocation(r *http.Request) *Location {
+func getLocation(r *http.Request) *Location {
 	scheme := resolveScheme(r)
 	host := resolveHost(r)
 	origin := scheme + "://" + host

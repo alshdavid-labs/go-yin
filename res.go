@@ -5,10 +5,10 @@ import (
 	"net/http"
 )
 
-type response struct {
-	Status     func(statusCode int) *response
-	SetCookie  func(cookie *http.Cookie) *response
-	SetHeader  func(key string, value string) *response
+type Response struct {
+	Status     func(statusCode int) *Response
+	SetCookie  func(cookie *http.Cookie) *Response
+	SetHeader  func(key string, value string) *Response
 	JSON       func(interface{})
 	String     func(s string)
 	SendStatus func(statusCode int)
@@ -16,20 +16,20 @@ type response struct {
 	Redirect   func(statusCode int, url string)
 }
 
-func Res(w http.ResponseWriter) *response {
-	r := &response{}
+func Res(w http.ResponseWriter) *Response {
+	r := &Response{}
 
-	r.Status = func(statusCode int) *response {
+	r.Status = func(statusCode int) *Response {
 		w.WriteHeader(statusCode)
 		return r
 	}
 
-	r.SetCookie = func(cookie *http.Cookie) *response {
+	r.SetCookie = func(cookie *http.Cookie) *Response {
 		http.SetCookie(w, cookie)
 		return r
 	}
 
-	r.SetHeader = func(key string, value string) *response {
+	r.SetHeader = func(key string, value string) *Response {
 		w.Header().Set(key, value)
 		return r
 	}
