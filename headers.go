@@ -125,7 +125,13 @@ var Headers = struct {
 	XRobotsTag                      string
 	XUACompatible                   string
 	Index                           string
+	XHost                           string
+	XOriginalScheme                 string
+	XOriginalHost                   string
 }{
+	XHost:                           "X-Host",
+	XOriginalScheme:                 "X-Original-Scheme",
+	XOriginalHost:                   "X-Original-Host",
 	XRealIP:                         "X-Real-IP",
 	Connection:                      "Connection",
 	KeepAlive:                       "Keep-Alive",
