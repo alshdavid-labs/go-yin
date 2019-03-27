@@ -24,26 +24,26 @@ func ServeClient(c ClientConfig) http.HandlerFunc {
 
 		file, _ := os.Stat(serveThis)
 		if file != nil {
-			res.File(serveThis)
+			res.SendFile(serveThis)
 			return
 		}
 
 		if c.SinglePageApplication == false {
 			file, _ = os.Stat(serveThis + ".html")
 			if file != nil {
-				res.File(serveThis + ".html")
+				res.SendFile(serveThis + ".html")
 				return
 			}
 
 			file, _ = os.Stat(serveThis + "/index.html")
 			if file != nil {
-				res.File(serveThis + "/index.html")
+				res.SendFile(serveThis + "/index.html")
 				return
 			}
 		}
 
 		if c.SinglePageApplication == true {
-			res.File(c.Directory + "/index.html")
+			res.SendFile(c.Directory + "/index.html")
 		} else {
 			res.SendStatus(http.StatusNotFound)
 		}
