@@ -31,12 +31,8 @@ func Req(r *http.Request) *request {
 	}
 
 	req.GetQuery = func(key string) string {
-		return r.Header.Get(key)
+		return r.URL.Query().Get(key)
 	}
-
-	// req.GetParam = func(key string) string {
-	// 	return r.Header.Get(key)
-	// }
 
 	return req
 }
