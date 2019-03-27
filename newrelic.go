@@ -17,8 +17,12 @@ func InitNewRelic(app newrelic.Application) *NewRelic {
 func (nr *NewRelic) CustomEvent(event string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			txn := newrelic.FromContext(r.Context())
+			if nr.App == nil {
+				next.ServeHTTP(w, r)
+				return
+			}
 
+			txn := newrelic.FromContext(r.Context())
 			if txn != nil {
 				txn.Ignore()
 			}
@@ -34,17 +38,23 @@ func (nr *NewRelic) CustomEvent(event string) func(http.Handler) http.Handler {
 
 func (nr *NewRelic) EventFromURLPath(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if nr.App == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
 		txn := nr.App.StartTransaction(r.URL.Path, w, r)
 		defer txn.End()
-
 		r = newrelic.RequestWithTransactionContext(r, txn)
-
 		next.ServeHTTP(txn, r)
 	})
 }
 
 func (nr *NewRelic) Ignore(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if nr.App == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
 		var txn newrelic.Transaction
 		txn = newrelic.FromContext(r.Context())
 		if txn != nil {
