@@ -13,6 +13,7 @@ type response struct {
 	String     func(s string)
 	SendStatus func(statusCode int)
 	File       func(r *http.Request, filepath string)
+	Redirect   func(statusCode int, url string)
 }
 
 func Res(w http.ResponseWriter) *response {
@@ -49,6 +50,12 @@ func Res(w http.ResponseWriter) *response {
 
 	r.File = func(r *http.Request, filepath string) {
 		http.ServeFile(w, r, filepath)
+	}
+
+	r.Redirect = func(statusCode int, url string) {
+		w.WriteHeader(statusCode)
+		w.Header().Set(Headers.Location, url)
+		w.Write([]byte(""))
 	}
 
 	return r
