@@ -6,10 +6,13 @@ import (
 	newrelic "github.com/newrelic/go-agent"
 )
 
-func NewRelic(app newrelic.Application) func(http.Handler) http.Handler {
+func NewRelic(app newrelic.Application, event string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			txn := app.StartTransaction(r.URL.Path, w, r)
+			if event == "" {
+				event = r.URL.Path
+			}
+			txn := app.StartTransaction(event, w, r)
 			defer txn.End()
 
 			r = newrelic.RequestWithTransactionContext(r, txn)
