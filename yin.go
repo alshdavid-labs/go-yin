@@ -6,5 +6,5 @@ import "net/http"
 type H map[string]interface{}
 
 func Event(w http.ResponseWriter, r *http.Request) (*Response, *Request) {
-	return Res(w), Req(r)
+	return Res(w, r), Req(r)
 }

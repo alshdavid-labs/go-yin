@@ -12,51 +12,49 @@ type Response struct {
 	JSON       func(interface{})
 	String     func(s string)
 	SendStatus func(statusCode int)
-	File       func(r *http.Request, filepath string)
+	File       func(filepath string)
 	Redirect   func(statusCode int, url string)
 }
 
-func Res(w http.ResponseWriter) *Response {
-	r := &Response{}
+func Res(w http.ResponseWriter, r *http.Request) *Response {
+	res := &Response{}
 
-	r.Status = func(statusCode int) *Response {
+	res.Status = func(statusCode int) *Response {
 		w.WriteHeader(statusCode)
-		return r
+		return res
 	}
 
-	r.SetCookie = func(cookie *http.Cookie) *Response {
+	res.SetCookie = func(cookie *http.Cookie) *Response {
 		http.SetCookie(w, cookie)
-		return r
+		return res
 	}
 
-	r.SetHeader = func(key string, value string) *Response {
+	res.SetHeader = func(key string, value string) *Response {
 		w.Header().Set(key, value)
-		return r
+		return res
 	}
 
-	r.JSON = func(u interface{}) {
+	res.JSON = func(u interface{}) {
 		w.Header().Set(Headers.ContentType, "application/json")
 		json.NewEncoder(w).Encode(u)
 	}
 
-	r.String = func(s string) {
+	res.String = func(s string) {
 		w.Write([]byte(s))
 	}
 
-	r.SendStatus = func(statusCode int) {
+	res.SendStatus = func(statusCode int) {
 		w.WriteHeader(statusCode)
 		w.Write([]byte(""))
 	}
 
-	r.File = func(r *http.Request, filepath string) {
+	res.File = func(filepath string) {
 		http.ServeFile(w, r, filepath)
 	}
 
-	r.Redirect = func(statusCode int, url string) {
-		w.WriteHeader(statusCode)
-		w.Header().Set(Headers.Location, url)
-		w.Write([]byte(""))
+	res.Redirect = func(statusCode int, url string) {
+		http.Redirect(w, r, url, statusCode)
 	}
 
-	return r
+	return res
 }

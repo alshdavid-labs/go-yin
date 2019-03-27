@@ -15,6 +15,7 @@ type ClientConfig struct {
 
 func ServeClient(c ClientConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		res := Res(w, r)
 		url := r.URL.Path
 		if c.BaseHref != "" {
 			url = strings.TrimPrefix(r.URL.Path, "/"+c.BaseHref)
@@ -23,28 +24,28 @@ func ServeClient(c ClientConfig) http.HandlerFunc {
 
 		file, _ := os.Stat(serveThis)
 		if file != nil {
-			Res(w).File(r, serveThis)
+			res.File(serveThis)
 			return
 		}
 
 		if c.SinglePageApplication == false {
 			file, _ = os.Stat(serveThis + ".html")
 			if file != nil {
-				Res(w).File(r, serveThis+".html")
+				res.File(serveThis + ".html")
 				return
 			}
 
 			file, _ = os.Stat(serveThis + "/index.html")
 			if file != nil {
-				Res(w).File(r, serveThis+"/index.html")
+				res.File(serveThis + "/index.html")
 				return
 			}
 		}
 
 		if c.SinglePageApplication == true {
-			Res(w).File(r, c.Directory+"/index.html")
+			res.File(c.Directory + "/index.html")
 		} else {
-			Res(w).SendStatus(http.StatusNotFound)
+			res.SendStatus(http.StatusNotFound)
 		}
 	}
 }
