@@ -4,19 +4,21 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 )
 
 type Request struct {
-	Body     func(body interface{}) error
-	Header   func(key string) string
-	Query    func(key string) string
-	Location func() *Location
+	BindBody    func(body interface{}) error
+	GetHeader   func(key string) string
+	GetQuery    func(key string) string
+	GetCookie   func(name string) string
+	GetLocation func() *Location
 }
 
 func Req(r *http.Request) *Request {
 	req := &Request{}
 
-	req.Body = func(body interface{}) error {
+	req.BindBody = func(body interface{}) error {
 		if r.Body == nil {
 			return errors.New("No Request body found")
 		}
@@ -27,15 +29,24 @@ func Req(r *http.Request) *Request {
 		return nil
 	}
 
-	req.Header = func(key string) string {
+	req.GetCookie = func(name string) string {
+		cookie, err := r.Cookie(name)
+		if err != nil {
+			return ""
+		}
+		val, _ := url.QueryUnescape(cookie.Value)
+		return val
+	}
+
+	req.GetHeader = func(key string) string {
 		return r.Header.Get(key)
 	}
 
-	req.Query = func(key string) string {
+	req.GetQuery = func(key string) string {
 		return r.URL.Query().Get(key)
 	}
 
-	req.Location = func() *Location {
+	req.GetLocation = func() *Location {
 		return getLocation(r)
 	}
 
